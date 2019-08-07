@@ -1,3 +1,4 @@
+import akka.Done
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
@@ -9,7 +10,8 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.DefaultJsonProtocol._
 import spray.json.RootJsonFormat
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 import scala.io.StdIn
 
 object WebServer {
@@ -18,7 +20,7 @@ object WebServer {
     s"<h1>Hello ${name}</h1>"
   }
 
-  def route: Route = concat(helloRoute, voucherRoute)
+  def route(repository: VoucherRepository)(implicit ec: ExecutionContext): Route = concat(helloRoute, voucherRoute(repository))
 
   val helloRoute: Route =
   path("hello") {
@@ -35,21 +37,23 @@ object WebServer {
   implicit val voucherFormat: RootJsonFormat[Voucher] = jsonFormat1(Voucher)
   implicit val voucherBatchRequestFormat = jsonFormat3(VoucherBatchRequest)
 
-  var vouchers: Seq[Voucher] = Seq()
-
-  val voucherRoute: Route =
+  def voucherRoute(repository: VoucherRepository)(implicit ec: ExecutionContext): Route =
     pathPrefix("vouchers") {
       get {
-        complete(vouchers)
+        complete(repository.getVouchers)
       } ~
       path("batch") {
         post {
           entity(as[VoucherBatchRequest]) { voucherBatchRequest =>
-            println(voucherBatchRequest)
-            (1 to voucherBatchRequest.quantity).foreach(i => {
-              vouchers = vouchers.appended( Voucher(i))
+            val eventualUnits: immutable.Seq[Future[Done]] = (1 to voucherBatchRequest.quantity).map(i => {
+              repository.saveVoucher(Voucher(i))
             })
-            complete(StatusCodes.Created)
+            val functionToEventualUnit: Future[Seq[Done]] = Future.sequence(eventualUnits)
+
+            onSuccess(functionToEventualUnit) { _: Seq[Done] =>
+              complete(StatusCodes.Created)
+            }
+
           }
         }
       }
@@ -61,11 +65,13 @@ object WebServer {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    val repository: VoucherRepository = VoucherRepository()
 
+    val bindingFuture = Http().bindAndHandle(route(repository), "localhost", 8086)
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
-
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    bindingFuture.foreach(b => {
+      println(s"Server online at http://${b.localAddress.getHostName}:${b.localAddress.getPort}/\nPress RETURN to stop...")
+    })
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

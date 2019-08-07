@@ -7,13 +7,13 @@ import org.scalatest.{FunSuite, Matchers}
 class WebServerTest extends FunSuite with Matchers with ScalatestRouteTest with ScalaFutures with SprayJsonSupport{
 
   test("should test route") {
-    Get("/hello") ~> WebServer.route ~> check {
+    Get("/hello") ~> WebServer.route(null) ~> check {
       responseAs[String] shouldEqual "<h1>Hello stranger</h1>"
     }
   }
 
   test("should return a bunch of vouchers") {
-    Get("/vouchers") ~> WebServer.route ~> check {
+    Get("/vouchers") ~> WebServer.route(null) ~> check {
       responseAs[String] shouldEqual """[{"id":1},{"id":2}]"""
     }
   }
@@ -24,7 +24,7 @@ class WebServerTest extends FunSuite with Matchers with ScalatestRouteTest with 
     val body = """{"price":10,"quantity":100,"description":"unit test"}"""
 
     Post("/vouchers/batch")
-      .withEntity(ContentTypes.`application/json`, body) ~> WebServer.route ~> check {
+      .withEntity(ContentTypes.`application/json`, body) ~> WebServer.route(null) ~> check {
       status shouldBe StatusCodes.Created
     }
   }
@@ -35,8 +35,8 @@ class WebServerTest extends FunSuite with Matchers with ScalatestRouteTest with 
     val body = """{"price":10,"quantity":3,"description":"unit test"}"""
 
     Post("/vouchers/batch")
-      .withEntity(ContentTypes.`application/json`, body) ~> WebServer.route ~> check {
-      Get("/vouchers") ~> WebServer.route ~> check {
+      .withEntity(ContentTypes.`application/json`, body) ~> WebServer.route(null) ~> check {
+      Get("/vouchers") ~> WebServer.route(null) ~> check {
         responseAs[String] shouldEqual """[{"id":1},{"id":2},{"id":3}]"""
       }
     }
