@@ -9,6 +9,7 @@ import org.scanamo._
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.AlpakkaInterpreter.Alpakka
 import org.scanamo.syntax._
+import org.scanamo.auto._
 
 import scala.collection.immutable
 import scala.concurrent.Future
