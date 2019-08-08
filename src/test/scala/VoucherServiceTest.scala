@@ -9,11 +9,12 @@ import org.scalatest.{FunSuiteLike, Matchers}
 
 import scala.concurrent.Future
 
-class VoucherServiceTest extends TestKit(ActorSystem("MySpec")) with FunSuiteLike with IdiomaticMockito with Matchers with ScalaFutures {
-
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  implicit val patience: PatienceConfig = PatienceConfig(Span(1, Minute))
-
+class VoucherServiceTest extends TestKit(ActorSystem("VoucherServiceTest"))
+  with FunSuiteLike
+  with IdiomaticMockito
+  with Matchers
+  with ScalaFutures {
+  
   test("should return 2 vouchers") {
     val voucherRepositoryMock = mock[VoucherRepository]
     voucherRepositoryMock.getVouchers shouldReturn Future.successful(Seq(WebServer.Voucher(4711), WebServer.Voucher(101)))
