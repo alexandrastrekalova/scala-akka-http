@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.dynamodb.{DynamoClient, DynamoSettings}
 import akka.stream.scaladsl.{Sink, Source}
+import com.amazonaws.services.dynamodbv2.model.DeleteItemResult
 import org.scanamo._
 import org.scanamo.syntax._
 import org.scanamo.auto._
@@ -61,5 +62,11 @@ case class VoucherRepository (
     val runResult: Future[Done] = mapResult.runWith(Sink.head)
 
     runResult
+  }
+
+  def deleteVoucher(id: Int): Future[Done] = {
+    val resultStream: Alpakka[DeleteItemResult] = scanamoClient.exec(voucherTable.delete('id -> id))
+    val mapResult = resultStream.map(item => Done)
+    mapResult.runWith(Sink.head)
   }
 }

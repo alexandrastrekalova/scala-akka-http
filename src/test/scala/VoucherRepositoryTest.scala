@@ -1,4 +1,5 @@
 import WebServer.Voucher
+import akka.Done
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
@@ -47,6 +48,20 @@ class VoucherRepositoryTest extends TestKit(ActorSystem("MySpec")) with FunSuite
     val finalResult = repo.getVoucher(1)
     finalResult.futureValue shouldBe Some(Voucher(1))
 
+  }
+
+  test("testDeleteVoucher") {
+
+    val repo: VoucherRepository = VoucherRepository()
+
+    val voucher: Voucher = Voucher(1)
+    val result = repo.saveVoucher(voucher)
+    result.futureValue shouldBe ()
+
+    val finalResult = repo.getVoucher(1)
+    finalResult.futureValue shouldBe Some(Voucher(1))
+
+    repo.deleteVoucher(1).futureValue shouldBe Done
   }
 
   test("fold") {
