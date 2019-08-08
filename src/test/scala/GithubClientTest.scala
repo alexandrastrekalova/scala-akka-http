@@ -1,11 +1,14 @@
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
-import org.scalatest.{FunSuiteLike, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Minute, Span}
+import org.scalatest.{FunSuiteLike, Matchers}
 
-class GithubClientTest extends TestKit(ActorSystem("MySpec")) with FunSuiteLike with Matchers with ScalaFutures{
+class GithubClientTest extends TestKit(ActorSystem("GithubClientTest"))
+  with FunSuiteLike
+  with Matchers
+  with ScalaFutures {
 
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val patience: PatienceConfig = PatienceConfig(Span(1, Minute))

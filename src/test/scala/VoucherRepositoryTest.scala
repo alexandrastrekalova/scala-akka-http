@@ -4,14 +4,14 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.Span
-import org.scalatest.{BeforeAndAfter, FunSuite, FunSuiteLike, Matchers}
-import org.scalatest.time._
+import org.scalatest.time.{Span, _}
+import org.scalatest.{BeforeAndAfter, FunSuiteLike, Matchers}
 
-import scala.concurrent.duration._
-import scala.concurrent.Await
-
-class VoucherRepositoryTest extends TestKit(ActorSystem("MySpec")) with FunSuiteLike with Matchers with ScalaFutures with BeforeAndAfter {
+class VoucherRepositoryTest extends TestKit(ActorSystem("VoucherRepositoryTest"))
+  with FunSuiteLike
+  with BeforeAndAfter
+  with Matchers
+  with ScalaFutures {
 
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
