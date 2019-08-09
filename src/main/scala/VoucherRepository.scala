@@ -24,17 +24,16 @@ case class VoucherRepository (
 
   def getVouchers(): Future[Seq[Voucher]] = {
     val resultStream: Alpakka[List[Either[DynamoReadError, Voucher]]] = scanamoClient.exec(voucherTable.scan())
-    val flatten: (Seq[Voucher], immutable.Seq[Voucher]) => Seq[Voucher] = (acc, i) => acc ++ i
-    val mappedResult = resultStream.map((list: immutable.Seq[Either[DynamoReadError, Voucher]]) => {
-      list.map((item: Either[DynamoReadError, Voucher]) => {
-        item match {
-          case Left(err) => throw new RuntimeException(err.toString)
-          case Right(voucher) => voucher
-        }
+    val mappedResult = resultStream
+      .map((list: immutable.Seq[Either[DynamoReadError, Voucher]]) => {
+        list.map((item: Either[DynamoReadError, Voucher]) => {
+          item match {
+            case Left(err) => throw new RuntimeException(err.toString)
+            case Right(voucher) => voucher
+          }
+        })
       })
-    })
-        .runFold(Seq[Voucher]())(flatten)
-
+      .runFold(Seq[Voucher]())(_ ++ _)
 
     mappedResult
   }
